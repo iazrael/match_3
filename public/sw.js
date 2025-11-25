@@ -1,9 +1,9 @@
 // Service Worker for PWA offline support
-const CACHE_NAME = 'match-3-v1';
+const CACHE_NAME = 'match-3-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  './index.html',
+  './manifest.json',
 ];
 
 // Install event
