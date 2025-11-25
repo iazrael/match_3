@@ -337,6 +337,9 @@ const App: React.FC = () => {
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
     if (!touchStartRef.current || !selectedPos || gameState !== GameState.IDLE || activeTool === 'BOMB') return;
     
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const cellSize = rect.width / BOARD_SIZE; // 单个格子的像素大小
+    
     const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
     
@@ -353,9 +356,13 @@ const App: React.FC = () => {
     if (absDiffX > absDiffY) {
       // 水平方向为主，清除垂直偏移
       displayOffsetY = 0;
+      // 限制拖动距离不超过一格
+      displayOffsetX = Math.max(-cellSize, Math.min(cellSize, displayOffsetX));
     } else if (absDiffY > absDiffX) {
       // 垂直方向为主，清除水平偏移
       displayOffsetX = 0;
+      // 限制拖动距离不超过一格
+      displayOffsetY = Math.max(-cellSize, Math.min(cellSize, displayOffsetY));
     } else {
       // 两个方向相同，都清除（要求严格的横纵移动）
       displayOffsetX = 0;
