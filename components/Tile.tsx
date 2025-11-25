@@ -1,5 +1,3 @@
-/** @jsx React.createElement */
-/** @jsxFrag React.Fragment */
 import React from 'react';
 import { AnimalType, TileData } from '../types';
 
@@ -10,6 +8,7 @@ interface TileProps {
   onClick: () => void;
   style?: React.CSSProperties;
   children?: React.ReactNode;
+  dragOffset?: { x: number; y: number } | null;
 }
 
 const AnimalEmoji: React.FC<{ type: AnimalType; className?: string }> = ({ type, className }) => {
@@ -38,13 +37,15 @@ const getColors = (type: AnimalType) => {
   }
 };
 
-const Tile: React.FC<TileProps> = ({ tile, isSelected, isHint, onClick, style, children }) => {
+const Tile: React.FC<TileProps> = ({ tile, isSelected, isHint, onClick, style, children, dragOffset }) => {
   const colors = getColors(tile.type);
   
   return (
     <div
       onClick={onClick}
-      style={style}
+      style={{
+        ...style
+      }}
       className={`
         absolute w-full h-full p-1.5 transition-all duration-300 ease-in-out
         ${tile.isMatched ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}
@@ -59,6 +60,10 @@ const Tile: React.FC<TileProps> = ({ tile, isSelected, isHint, onClick, style, c
           ${isHint ? 'ring-4 ring-offset-2 ring-green-400 animate-pulse' : ''}
           active:scale-95 hover:brightness-105
         `}
+        style={{
+          transform: dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : undefined,
+          transition: dragOffset ? 'none' : 'transform 0.1s ease-in-out'
+        }}
       >
         <AnimalEmoji type={tile.type} className="w-full h-full" />
         {children}

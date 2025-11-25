@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [selectedPos, setSelectedPos] = useState<Coordinate | null>(null);
   const [level, setLevel] = useState(1);
   const [combo, setCombo] = useState(0);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   
   // Tools state
   const [activeTool, setActiveTool] = useState<ToolType>(null);
@@ -312,29 +313,76 @@ const App: React.FC = () => {
     return newGrid;
   };
 
-  // Touch Event Handlers for Swipe
-  const handleTouchStart = (e: React.TouchEvent, x: number, y: number) => {
+  // Touch/Mouse Event Handlers for Drag
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
     if (gameState !== GameState.IDLE) return;
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    };
-    // Also select the tile on touch start if not using bomb
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    
+    touchStartRef.current = { x: clientX, y: clientY };
+    setDragOffset({ x: 0, y: 0 });
+    
+    // Select the tile on touch start
     if (activeTool !== 'BOMB') {
-       handleTileClick(x, y);
+      // If already selected the same tile, keep it selected for dragging
+      if (selectedPos && selectedPos.x === x && selectedPos.y === y) {
+        return;
+      }
+      setSelectedPos({ x, y });
+      setHintTiles([]);
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent, x: number, y: number) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
+    if (!touchStartRef.current || !selectedPos || gameState !== GameState.IDLE || activeTool === 'BOMB') return;
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    
+    const offsetX = clientX - touchStartRef.current.x;
+    const offsetY = clientY - touchStartRef.current.y;
+    
+    const absDiffX = Math.abs(offsetX);
+    const absDiffY = Math.abs(offsetY);
+    
+    // 只允许水平或垂直移动，不允许斜向
+    let displayOffsetX = offsetX;
+    let displayOffsetY = offsetY;
+    
+    if (absDiffX > absDiffY) {
+      // 水平方向为主，清除垂直偏移
+      displayOffsetY = 0;
+    } else if (absDiffY > absDiffX) {
+      // 垂直方向为主，清除水平偏移
+      displayOffsetX = 0;
+    } else {
+      // 两个方向相同，都清除（要求严格的横纵移动）
+      displayOffsetX = 0;
+      displayOffsetY = 0;
+    }
+    
+    setDragOffset({ x: displayOffsetX, y: displayOffsetY });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
     if (!touchStartRef.current || gameState !== GameState.IDLE) return;
     
-    // If using bomb, tap is handled by onClick, swipe shouldn't cancel it necessarily but let's keep it simple
-    if (activeTool === 'BOMB') return;
+    // If using bomb, tap is handled by onClick
+    if (activeTool === 'BOMB') {
+      setDragOffset(null);
+      touchStartRef.current = null;
+      return;
+    }
 
-    if (!selectedPos) return;
+    if (!selectedPos) {
+      setDragOffset(null);
+      touchStartRef.current = null;
+      return;
+    }
 
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
+    const touchEndX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as React.MouseEvent).clientX;
+    const touchEndY = 'changedTouches' in e ? e.changedTouches[0].clientY : (e as React.MouseEvent).clientY;
 
     const diffX = touchEndX - touchStartRef.current.x;
     const diffY = touchEndY - touchStartRef.current.y;
@@ -342,28 +390,44 @@ const App: React.FC = () => {
     const absDiffX = Math.abs(diffX);
     const absDiffY = Math.abs(diffY);
 
-    const threshold = 30; // Minimum pixel distance for a swipe
+    const threshold = 30; // Minimum pixel distance for a valid drag
 
+    // Valid drag: moved more than threshold pixels
     if (Math.max(absDiffX, absDiffY) > threshold) {
-      let targetX = x;
-      let targetY = y;
+      let targetX = selectedPos.x;
+      let targetY = selectedPos.y;
 
+      // Only move if one direction is significantly dominant
       if (absDiffX > absDiffY) {
-        // Horizontal
-        targetX = diffX > 0 ? x + 1 : x - 1;
+        // Horizontal drag - only move horizontally
+        targetX = diffX > 0 ? selectedPos.x + 1 : selectedPos.x - 1;
+      } else if (absDiffY > absDiffX) {
+        // Vertical drag - only move vertically
+        targetY = diffY > 0 ? selectedPos.y + 1 : selectedPos.y - 1;
       } else {
-        // Vertical
-        targetY = diffY > 0 ? y + 1 : y - 1;
+        // 两个方向相同，取消交换
+        setSelectedPos(null);
+        setHintTiles([]);
+        setDragOffset(null);
+        touchStartRef.current = null;
+        return;
       }
 
-      // Check bounds
+      // Check bounds and ensure only one cell away
       if (targetX >= 0 && targetX < BOARD_SIZE && targetY >= 0 && targetY < BOARD_SIZE) {
-        handleSwap({ x, y }, { x: targetX, y: targetY });
-        setSelectedPos(null); // Deselect after swipe attempt
-        setHintTiles([]);
+        // Verify it's exactly adjacent (one cell away)
+        if (Math.abs(targetX - selectedPos.x) + Math.abs(targetY - selectedPos.y) === 1) {
+          handleSwap({ x: selectedPos.x, y: selectedPos.y }, { x: targetX, y: targetY });
+        }
       }
+      setSelectedPos(null);
+      setHintTiles([]);
+    } else {
+      // Invalid drag: not enough movement, deselect
+      setSelectedPos(null);
     }
 
+    setDragOffset(null);
     touchStartRef.current = null;
   };
 
@@ -404,11 +468,32 @@ const App: React.FC = () => {
         {/* Board */}
         <div 
           className="relative bg-gradient-to-br from-blue-100 via-green-100 to-teal-100 rounded-2xl cursor-pointer border-2 border-blue-200"
+          data-board
           style={{
             width: 'clamp(280px, 90vw, 480px)',
             height: 'clamp(280px, 90vw, 480px)',
             aspectRatio: '1 / 1'
           }}
+          onMouseDown={(e) => {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / (rect.width / BOARD_SIZE));
+            const y = Math.floor((e.clientY - rect.top) / (rect.height / BOARD_SIZE));
+            if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE) {
+              handleTouchStart(e, x, y);
+            }
+          }}
+          onMouseMove={handleTouchMove}
+          onMouseUp={handleTouchEnd}
+          onTouchStart={(e) => {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const x = Math.floor((e.touches[0].clientX - rect.left) / (rect.width / BOARD_SIZE));
+            const y = Math.floor((e.touches[0].clientY - rect.top) / (rect.height / BOARD_SIZE));
+            if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE) {
+              handleTouchStart(e, x, y);
+            }
+          }}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {grid.map((row, y) => (
             <React.Fragment key={y}>
@@ -419,20 +504,14 @@ const App: React.FC = () => {
                   isSelected={selectedPos?.x === x && selectedPos?.y === y}
                   isHint={hintTiles.some(pos => pos.x === x && pos.y === y)}
                   onClick={() => handleTileClick(x, y)}
+                  dragOffset={selectedPos?.x === x && selectedPos?.y === y ? dragOffset : null}
                   style={{
                     width: `${100 / BOARD_SIZE}%`,
                     height: `${100 / BOARD_SIZE}%`,
                     left: `${(x / BOARD_SIZE) * 100}%`,
                     top: `${(y / BOARD_SIZE) * 100}%`,
                   }}
-                >
-                  {/* Invisible touch overlay for gesture capture */}
-                  <div 
-                    className="absolute inset-0 z-10"
-                    onTouchStart={(e) => handleTouchStart(e, x, y)}
-                    onTouchEnd={(e) => handleTouchEnd(e, x, y)}
-                  />
-                </Tile>
+                />
               ))}
             </React.Fragment>
           ))}

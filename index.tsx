@@ -13,3 +13,10 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// 注册 Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/public/sw.js').catch(error => {
+    console.log('Service Worker registration failed:', error);
+  });
+}
