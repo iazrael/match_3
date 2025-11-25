@@ -1,6 +1,3 @@
-
-/** @jsx React.createElement */
-/** @jsxFrag React.Fragment */
 import React, { useState, useEffect, useRef } from 'react';
 import { Trophy, RotateCcw, Star, Bomb, Lightbulb, Shuffle } from 'lucide-react';
 import { AnimalType, GameState, Grid, TileData, Coordinate } from './types';
@@ -218,18 +215,21 @@ const App: React.FC = () => {
     // Wait for disappear animation
     await new Promise(r => setTimeout(r, 300));
 
-    // 2. Remove and Drop
+    // 2. Remove and Drop - defer computation to avoid blocking
+    await new Promise(r => setTimeout(r, 0));
     const droppedGrid = applyGravity(markedGrid);
     setGrid(droppedGrid);
 
     // Wait for drop "animation"
     await new Promise(r => setTimeout(r, 300));
 
-    // 3. Fill top
+    // 3. Fill top - defer computation to avoid blocking
+    await new Promise(r => setTimeout(r, 0));
     const filledGrid = fillEmptyTiles(droppedGrid);
     setGrid(filledGrid);
 
-    // 4. Check recursively
+    // 4. Check recursively - defer match finding to avoid blocking
+    await new Promise(r => setTimeout(r, 0));
     const newMatches = findMatches(filledGrid);
     if (newMatches.size > 0) {
       // Pass incremented combo to next step
@@ -285,7 +285,7 @@ const App: React.FC = () => {
                 row.push(newGrid[y][x]);
             } else {
                 // Placeholder for empty, will be filled next step
-                 row.push({ id: 'empty', type: AnimalType.CAT, x, y, isMatched: true }); // isMatched true denotes empty here temporarily
+                 row.push({ id: `empty-${y}-${x}`, type: AnimalType.CAT, x, y, isMatched: true }); // isMatched true denotes empty here temporarily
             }
         }
         resultGrid.push(row);
@@ -297,7 +297,7 @@ const App: React.FC = () => {
     const newGrid = cloneGrid(currentGrid);
     for (let y = 0; y < BOARD_SIZE; y++) {
       for (let x = 0; x < BOARD_SIZE; x++) {
-        if (newGrid[y][x].id === 'empty' || newGrid[y][x].isMatched) {
+        if (newGrid[y][x].id.startsWith('empty-') || newGrid[y][x].isMatched) {
           newGrid[y][x] = {
             id: `tile-${x}-${y}-${Date.now()}-${Math.random()}`,
             type: getRandomAnimal(),
@@ -371,9 +371,9 @@ const App: React.FC = () => {
   const isGameOver = moves <= 0 && gameState === GameState.IDLE;
 
   return (
-    <div className="flex flex-col h-full max-w-md mx-auto bg-white shadow-2xl relative select-none">
+    <div className="flex flex-col h-screen w-screen max-w-full bg-white shadow-2xl relative select-none overflow-hidden">
       {/* Header / Stats */}
-      <div className="p-4 bg-indigo-600 text-white flex justify-between items-center shadow-md z-10 shrink-0">
+      <div className="p-3 bg-indigo-600 text-white flex justify-between items-center shadow-md z-10 shrink-0 flex-wrap gap-2">
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
              <Trophy size={20} className="text-yellow-300" />
@@ -392,7 +392,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Game Board Container */}
-      <div className="flex-1 flex items-center justify-center p-4 bg-indigo-50 relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 bg-indigo-50 relative overflow-hidden min-h-0">
         
         {/* Combo Indicator */}
         {combo > 1 && (
@@ -448,7 +448,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Tools Bar */}
-      <div className="bg-indigo-50 px-4 pb-2 pt-0 flex justify-center gap-4 shrink-0">
+      <div className="bg-indigo-50 px-3 py-1 flex justify-center gap-2 shrink-0 flex-wrap">
           <button 
             disabled={tools.bomb === 0 || gameState !== GameState.IDLE}
             onClick={() => setActiveTool(activeTool === 'BOMB' ? null : 'BOMB')}
@@ -500,7 +500,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Footer / Restart */}
-      <div className="p-4 bg-white border-t border-indigo-100 flex justify-center shrink-0 pb-6">
+      <div className="p-3 bg-white border-t border-indigo-100 flex justify-center shrink-0">
         <button 
           onClick={startNewGame}
           className="flex items-center gap-2 px-6 py-3 bg-indigo-100 text-indigo-700 rounded-full font-bold hover:bg-indigo-200 active:scale-95 transition-colors"
