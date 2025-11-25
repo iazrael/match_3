@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, RotateCcw, Star, Bomb, Lightbulb, Shuffle } from 'lucide-react';
 import { AnimalType, GameState, Grid, TileData, Coordinate } from './types';
 import { createBoard, findMatches, cloneGrid, BOARD_SIZE, getRandomAnimal, findPossibleMove } from './utils/gameLogic';
 import Tile from './components/Tile';
@@ -371,42 +370,44 @@ const App: React.FC = () => {
   const isGameOver = moves <= 0 && gameState === GameState.IDLE;
 
   return (
-    <div className="flex flex-col h-screen w-screen max-w-full bg-white shadow-2xl relative select-none overflow-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-gradient-to-b from-blue-50 via-green-50 to-teal-50 relative select-none">
+      <div className="flex flex-col flex-1 max-w-2xl mx-auto w-full">
       {/* Header / Stats */}
-      <div className="p-3 bg-indigo-600 text-white flex justify-between items-center shadow-md z-10 shrink-0 flex-wrap gap-2">
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-             <Trophy size={20} className="text-yellow-300" />
+      <div className="p-4 bg-gradient-to-r from-blue-100 via-green-100 to-teal-100 text-blue-800 flex justify-between items-center z-10 shrink-0 flex-wrap gap-3">
+        <div className="flex-shrink-0">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+             <span className="text-2xl">🏆</span>
              <span>第 {level} 关</span>
           </h1>
-          <p className="text-indigo-200 text-xs">目标: {level * 1000} 分</p>
+          <p className="text-blue-600 text-xs font-semibold">目标: {level * 1000} 分</p>
         </div>
-        <div className="text-center">
-          <div className="text-2xl font-black font-mono">{score}</div>
-          <div className="text-xs opacity-75">得分</div>
+        <div className="text-center flex-1 px-4">
+          <div className="text-4xl font-black font-mono text-blue-500">{score}</div>
+          <div className="text-xs opacity-70 font-bold tracking-widest text-blue-600">得分</div>
         </div>
-        <div className="text-right">
-             <div className="text-xl font-bold">{moves}</div>
-             <div className="text-xs opacity-75">步数</div>
+        <div className="text-right flex-shrink-0">
+             <div className="text-2xl font-bold text-blue-600">{moves}</div>
+             <div className="text-xs opacity-70 font-bold tracking-widest text-blue-600">步数</div>
         </div>
       </div>
 
       {/* Game Board Container */}
-      <div className="flex-1 flex items-center justify-center p-4 bg-indigo-50 relative overflow-hidden min-h-0">
+      <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-blue-30 via-green-30 to-teal-30 relative min-h-0">
         
         {/* Combo Indicator */}
         {combo > 1 && (
-             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full font-bold animate-bounce z-20 shadow-lg border-2 border-white whitespace-nowrap">
-               {combo} 连击!
+             <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-200 to-orange-200 text-slate-700 px-6 py-2 rounded-full font-bold animate-bounce z-20 border-2 border-white whitespace-nowrap text-lg">
+               ✨ {combo} 连击! ✨
              </div>
         )}
 
         {/* Board */}
         <div 
-          className="relative bg-indigo-200 rounded-lg shadow-inner cursor-pointer"
+          className="relative bg-gradient-to-br from-blue-100 via-green-100 to-teal-100 rounded-2xl cursor-pointer border-2 border-blue-200"
           style={{
-            width: 'min(100%, 85vw)',
-            height: 'min(100%, 85vw)',
+            width: 'clamp(280px, 90vw, 480px)',
+            height: 'clamp(280px, 90vw, 480px)',
+            aspectRatio: '1 / 1'
           }}
         >
           {grid.map((row, y) => (
@@ -448,93 +449,94 @@ const App: React.FC = () => {
       </div>
 
       {/* Tools Bar */}
-      <div className="bg-indigo-50 px-3 py-1 flex justify-center gap-2 shrink-0 flex-wrap">
+      <div className="bg-gradient-to-r from-blue-100 via-green-100 to-teal-100 px-4 py-3 flex justify-center gap-3 shrink-0 flex-wrap">
           <button 
             disabled={tools.bomb === 0 || gameState !== GameState.IDLE}
             onClick={() => setActiveTool(activeTool === 'BOMB' ? null : 'BOMB')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-20
-                ${activeTool === 'BOMB' ? 'bg-red-100 ring-2 ring-red-500 scale-105' : 'bg-white hover:bg-gray-50'}
-                ${(tools.bomb === 0 || gameState !== GameState.IDLE) ? 'opacity-50 grayscale' : 'shadow-sm'}
+            className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all w-24 font-semibold
+                ${activeTool === 'BOMB' ? 'bg-red-100 ring-3 ring-red-200 scale-105 text-red-700' : 'bg-white text-slate-700 hover:bg-slate-50'}
+                ${(tools.bomb === 0 || gameState !== GameState.IDLE) ? 'opacity-40 grayscale cursor-not-allowed' : 'hover:bg-gray-100'}
             `}
           >
             <div className="relative">
-                <Bomb className="text-red-500" size={24} />
-                <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                <span className="text-4xl">💣</span>
+                <span className="absolute -top-3 -right-3 bg-red-500 text-white text-[11px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white">
                     {tools.bomb}
                 </span>
             </div>
-            <span className="text-xs font-bold text-slate-600">炸弹</span>
+            <span className="text-xs font-bold">炸弹</span>
           </button>
 
           <button 
             disabled={tools.hint === 0 || gameState !== GameState.IDLE}
             onClick={useHint}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-20 bg-white hover:bg-gray-50 shadow-sm
-                ${(tools.hint === 0 || gameState !== GameState.IDLE) ? 'opacity-50 grayscale' : ''}
+            className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all w-24 font-semibold
+                ${tools.hint > 0 && gameState === GameState.IDLE ? 'bg-yellow-100 text-slate-800' : 'bg-white text-slate-400'}
+                ${(tools.hint === 0 || gameState !== GameState.IDLE) ? 'opacity-40 grayscale cursor-not-allowed' : 'text-slate-700 hover:bg-gray-100'}
             `}
           >
              <div className="relative">
-                <Lightbulb className="text-yellow-500" size={24} />
-                <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                <span className="text-4xl">💡</span>
+                <span className="absolute -top-3 -right-3 bg-amber-500 text-white text-[11px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white">
                     {tools.hint}
                 </span>
             </div>
-            <span className="text-xs font-bold text-slate-600">提示</span>
+            <span className="text-xs font-bold">提示</span>
           </button>
 
           <button 
             disabled={tools.shuffle === 0 || gameState !== GameState.IDLE}
             onClick={useShuffle}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-20 bg-white hover:bg-gray-50 shadow-sm
-                ${(tools.shuffle === 0 || gameState !== GameState.IDLE) ? 'opacity-50 grayscale' : ''}
+            className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all w-24 font-semibold
+                ${tools.shuffle > 0 && gameState === GameState.IDLE ? 'bg-cyan-100 text-slate-800' : 'bg-white text-slate-400'}
+                ${(tools.shuffle === 0 || gameState !== GameState.IDLE) ? 'opacity-40 grayscale cursor-not-allowed' : 'text-slate-700 hover:bg-gray-100'}
             `}
           >
              <div className="relative">
-                <Shuffle className="text-blue-500" size={24} />
-                <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                <span className="text-4xl">🔀</span>
+                <span className="absolute -top-3 -right-3 bg-blue-500 text-white text-[11px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white">
                     {tools.shuffle}
                 </span>
             </div>
-            <span className="text-xs font-bold text-slate-600">重排</span>
+            <span className="text-xs font-bold">重排</span>
           </button>
       </div>
 
       {/* Footer / Restart */}
-      <div className="p-3 bg-white border-t border-indigo-100 flex justify-center shrink-0">
+      <div className="p-4 bg-gradient-to-r from-blue-100 to-green-100 border-t border-blue-200 flex justify-center shrink-0">
         <button 
           onClick={startNewGame}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-100 text-indigo-700 rounded-full font-bold hover:bg-indigo-200 active:scale-95 transition-colors"
+          className="flex items-center gap-3 px-8 py-3 bg-gradient-to-r from-emerald-300 to-teal-300 text-white rounded-full font-bold text-lg hover:from-emerald-200 hover:to-teal-200 active:scale-95 transition-all"
         >
-          <RotateCcw size={20} />
+          <span className="text-2xl">🔄</span>
           <span>重新开始</span>
         </button>
       </div>
 
       {/* Game Over Modal */}
       {isGameOver && (
-        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center transform scale-100 animate-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Star size={40} className="text-yellow-500" fill="currentColor" />
-            </div>
+        <div className="absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-gradient-to-b from-white to-green-50 rounded-3xl p-8 max-w-sm w-full text-center transform scale-100 animate-in zoom-in duration-300 border-2 border-blue-200">
+            <div className="text-6xl mb-6">✨</div>
             
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">游戏结束!</h2>
-            <p className="text-slate-500 mb-6">太棒了！你最终获得了</p>
+            <h2 className="text-3xl font-black bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent mb-2">游戏结束!</h2>
+            <p className="text-slate-600 mb-8 text-lg font-semibold">太棒了！你最终获得了</p>
             
-            <div className="bg-indigo-50 rounded-xl p-4 mb-8">
-              <div className="text-4xl font-black text-indigo-600 mb-1">{score}</div>
-              <div className="text-sm text-indigo-400 font-bold uppercase tracking-wider">总得分</div>
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-6 mb-8 border-2 border-blue-200">
+              <div className="text-5xl font-black bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent mb-2">{score}</div>
+              <div className="text-sm text-blue-500 font-bold uppercase tracking-widest">总得分</div>
             </div>
 
             <button 
               onClick={startNewGame}
-              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 active:scale-95 transition-all"
+              className="w-full py-4 bg-gradient-to-r from-blue-400 to-green-400 text-white rounded-xl font-bold text-lg hover:from-blue-300 hover:to-green-300 active:scale-95 transition-all"
             >
               再玩一次
             </button>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

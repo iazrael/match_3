@@ -12,12 +12,78 @@
         touch-action: none;
         -webkit-user-select: none;
         user-select: none;
+        background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #f0f4ff 100%);
+      }
+
+      /* 自定义动画 */
+      @keyframes spin-slow {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes float {
+        0%, 100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      @keyframes glow {
+        0%, 100% {
+          box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+      }
+
+      @keyframes pulse-scale {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .animate-spin-slow {
+        animation: spin-slow 2s linear infinite;
+      }
+
+      .animate-float {
+        animation: float 2s ease-in-out infinite;
+      }
+
+      .animate-glow {
+        animation: glow 1.5s ease-in-out infinite;
+      }
+
+      .animate-pulse-scale {
+        animation: pulse-scale 1s ease-in-out infinite;
+      }
+
+      /* 游戏板背景模式 */
+      .game-board {
+        background: 
+          radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+      }
+
+      /* 平滑过渡 */
+      * {
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0"
@@ -25,7 +91,7 @@
 }
 </script>
 </head>
-  <body class="bg-indigo-50 text-slate-800 h-screen w-screen overflow-hidden">
+  <body class="text-slate-700 h-screen w-screen overflow-hidden">
     <div id="root"></div>
   <script type="module" src="./index.tsx"></script>
 </body>

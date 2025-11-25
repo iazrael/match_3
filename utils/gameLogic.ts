@@ -6,7 +6,7 @@ export const ANIMAL_TYPES = [
   AnimalType.DOG,
   AnimalType.RABBIT,
   AnimalType.BEAR,
-  AnimalType.BIRD,
+  AnimalType.FROG,
   AnimalType.FISH
 ];
 
